@@ -247,6 +247,21 @@ function assembleBoard(created: any[]): any | null {
     }
   });
 
+  // Z-ORDER FIX (Zain's "text behind the box" report): Penpot renders children
+  // with HIGHER index ON TOP. appendChild order leaves each opaque box ABOVE
+  // its text. Reorder: all text/label objects go LAST so labels render on top
+  // of their boxes and are readable.
+  try {
+    const children: any[] = [...((board as any).children ?? [])];
+    const texts = children.filter((c: any) => (c?.name ?? "").endsWith("-text") || (c?.name ?? "").endsWith("-label"));
+    const rest = children.filter((c: any) => !texts.includes(c));
+    if (texts.length && rest.length) {
+      (board as any).children = [...rest, ...texts];
+    }
+  } catch {
+    // reorder is best-effort; appendChild order still works if this fails
+  }
+
   return board;
 }
 
