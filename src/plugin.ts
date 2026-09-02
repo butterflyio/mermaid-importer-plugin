@@ -55,6 +55,11 @@ function importNode(nodeData: SvgNodeData): any[] {
   const created: any[] = [];
   const pos = parseTransform(nodeData.transform);
   const name = nodeData.label || nodeData.id || "mermaid-node";
+  // Track the node SHAPE's visible bounds so the label can be centered on it.
+  let labelCx = pos.x;
+  let labelCy = pos.y;
+  let labelCw = 0;
+  let labelCh = 0;
 
   if (nodeData.shape.kind === "path" && nodeData.shape.d) {
     const p = penpot.createPath();
@@ -76,6 +81,11 @@ function importNode(nodeData: SvgNodeData): any[] {
     r.strokes = [{ strokeColor: "#2e3434", strokeWidth: 2 }];
     if (rx > 0) (r as any).borderRadius = rx;
     created.push(r);
+    // rectangle bounds are known - center the label on the actual box
+    labelCx = r.x + nodeData.shape.w! / 2;
+    labelCy = r.y + nodeData.shape.h! / 2;
+    labelCw = nodeData.shape.w!;
+    labelCh = nodeData.shape.h!;
   } else if (nodeData.shape.kind === "ellipse") {
     const e = penpot.createEllipse();
     e.name = name;
@@ -85,14 +95,16 @@ function importNode(nodeData: SvgNodeData): any[] {
     e.fills = [{ fillColor: "#d0d0d0" }];
     e.strokes = [{ strokeColor: "#2e3434", strokeWidth: 2 }];
     created.push(e);
+    labelCx = e.x + 60;
+    labelCy = e.y + 30;
+    labelCw = 120;
+    labelCh = 60;
   }
 
   if (nodeData.label) {
     const t = penpot.createText(nodeData.label);
     if (t) {
       t.name = name + "-text";
-      t.x = pos.x;
-      t.y = pos.y;
       t.growType = "auto-width";
       const fontSize = parseFloat(nodeData.labelStyle["font-size"] || "16");
       t.fontSize = String(fontSize);
@@ -101,6 +113,20 @@ function importNode(nodeData: SvgNodeData): any[] {
         const toHex = (n: number) => n.toString(16).padStart(2, "0");
         t.fills = [{ fillColor: `#${toHex(+colorMatch[1])}${toHex(+colorMatch[2])}${toHex(+colorMatch[3])}`, fillOpacity: 1 }];
       }
+      // Center the text on the node box: measure the text (runtime updates
+      // width/height once characters + growType are set), then offset by half.
+      // Fall back to an estimate if the runtime hasn't measured yet.
+      let tw = Math.max(0, (t as any).width ?? 0);
+      let th = Math.max(0, (t as any).height ?? 0);
+      if (!tw) {
+        // rough estimate: ~0.6em average glyph width for the label font size
+        tw = nodeData.label.length * fontSize * 0.6;
+      }
+      if (!th) {
+        th = fontSize * 1.25;
+      }
+      t.x = labelCx - tw / 2;
+      t.y = labelCy - th / 2;
       created.push(t);
     }
   }
@@ -158,15 +184,22 @@ function importEdge(edge: SvgEdgeData): any[] {
   arrow.strokes = [];
   created.push(arrow);
 
-  // 3. Edge label (branch text)
+  // 3. Edge label (branch text) - centered on its anchor point
   if (edge.label) {
     const t = penpot.createText(edge.label);
     if (t) {
       t.name = (edge.id || "edge") + "-label";
-      t.x = edge.labelX ?? edge.arrowX;
-      t.y = edge.labelY ?? edge.arrowY;
       t.growType = "auto-width";
       t.fontSize = "13";
+      const fontSize = 13;
+      const lx = edge.labelX ?? edge.arrowX;
+      const ly = edge.labelY ?? edge.arrowY;
+      let tw = Math.max(0, (t as any).width ?? 0);
+      let th = Math.max(0, (t as any).height ?? 0);
+      if (!tw) tw = edge.label.length * fontSize * 0.6;
+      if (!th) th = fontSize * 1.25;
+      t.x = lx - tw / 2;
+      t.y = ly - th / 2;
       created.push(t);
     }
   }
