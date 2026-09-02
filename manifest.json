@@ -2,7 +2,7 @@
   "name": "Mermaid Importer",
   "description": "Turn Mermaid flowchart text into editable Penpot shapes",
   "version": 2,
-  "code": "plugin.js",
-  "icon": "icon.svg",
+  "code": "/mermaid-importer-plugin/plugin.js",
+  "icon": "/mermaid-importer-plugin/icon.svg",
   "permissions": ["content:read", "content:write"]
 }

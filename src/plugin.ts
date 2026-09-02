@@ -223,7 +223,7 @@ function assembleBoard(created: any[]): any | null {
   return board;
 }
 
-penpot.ui.open("Mermaid Importer", "/spike/index.html", {
+penpot.ui.open("Mermaid Importer", "/mermaid-importer-plugin/index.html", {
   width: 480,
   height: 640,
 });
