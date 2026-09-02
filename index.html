@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mermaid Importer</title>
+  <link rel="stylesheet" href="https://penpot.github.io/penpot-plugins-styles/styles.css" />
+  <style>
+    body { font-family: var(--font-family, system-ui, sans-serif); padding: 4px; }
+    #app { display: flex; flex-direction: column; gap: 8px; }
+    h3 { margin: 0; font-size: 15px; }
+    .row { display: flex; gap: 8px; align-items: center; }
+    textarea#mermaid-input {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px;
+    }
+    #char-count { font-size: 11px; opacity: .7; margin-left: auto; }
+    #status { font-size: 12px; min-height: 16px; }
+    #status.error { color: var(--danger-color, #c0362b); }
+    #render-host {
+      border: 1px solid rgba(128,128,128,.3);
+      border-radius: 8px; padding: 8px;
+      overflow: auto; max-height: 320px;
+      background: #fff;
+      transition: background .2s;
+    }
+    body[data-theme="dark"] #render-host { background: #1f2428; }
+    button { cursor: pointer; }
+    .hint { font-size: 11px; opacity: .6; }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <h3>Mermaid Importer</h3>
+    <p class="hint">Paste a Mermaid flowchart, preview it, then Import to Penpot as a board.</p>
+    <textarea id="mermaid-input" rows="8" placeholder="flowchart TD&#10;A[Start] --> B{Web3?}"></textarea>
+    <div class="row">
+      <span class="hint">Preview updates live</span>
+      <span id="char-count">0 chars</span>
+    </div>
+    <div class="row">
+      <button id="import-btn" type="button" style="flex:1">Import</button>
+      <button id="clear-btn" type="button" style="flex:1">Clear</button>
+    </div>
+    <div id="status"></div>
+    <div id="render-host"></div>
+  </div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

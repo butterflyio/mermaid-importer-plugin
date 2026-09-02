@@ -1,0 +1,8 @@
+node_modules/
+dist/
+*.log
+.DS_Store
+.vscode/
+.idea/
+# stray tsc output next to source (vite compiles cleanly)
+src/*.js
