@@ -40,6 +40,8 @@ interface SvgNodeData {
   transform: string;
   label: string;
   labelStyle: Record<string, string>;
+  labelW: number;
+  labelH: number;
   shape: {
     kind: "path" | "rect" | "ellipse";
     d?: string;
@@ -113,18 +115,11 @@ function importNode(nodeData: SvgNodeData): any[] {
         const toHex = (n: number) => n.toString(16).padStart(2, "0");
         t.fills = [{ fillColor: `#${toHex(+colorMatch[1])}${toHex(+colorMatch[2])}${toHex(+colorMatch[3])}`, fillOpacity: 1 }];
       }
-      // Center the text on the node box: measure the text (runtime updates
-      // width/height once characters + growType are set), then offset by half.
-      // Fall back to an estimate if the runtime hasn't measured yet.
-      let tw = Math.max(0, (t as any).width ?? 0);
-      let th = Math.max(0, (t as any).height ?? 0);
-      if (!tw) {
-        // rough estimate: ~0.6em average glyph width for the label font size
-        tw = nodeData.label.length * fontSize * 0.6;
-      }
-      if (!th) {
-        th = fontSize * 1.25;
-      }
+      // Center the text on the node box using mermaid's EXACT label box
+      // (foreignObject width/height in the SVG - pixel-accurate with the font).
+      // Fall back to a rough estimate only if mermaid didn't provide it.
+      let tw = nodeData.labelW || nodeData.label.length * fontSize * 0.6;
+      let th = nodeData.labelH || fontSize * 1.25;
       t.x = labelCx - tw / 2;
       t.y = labelCy - th / 2;
       created.push(t);
@@ -146,6 +141,8 @@ interface SvgEdgeData {
   label?: string;
   labelX?: number;
   labelY?: number;
+  labelW?: number;
+  labelH?: number;
 }
 
 /**
@@ -191,13 +188,10 @@ function importEdge(edge: SvgEdgeData): any[] {
       t.name = (edge.id || "edge") + "-label";
       t.growType = "auto-width";
       t.fontSize = "13";
-      const fontSize = 13;
       const lx = edge.labelX ?? edge.arrowX;
       const ly = edge.labelY ?? edge.arrowY;
-      let tw = Math.max(0, (t as any).width ?? 0);
-      let th = Math.max(0, (t as any).height ?? 0);
-      if (!tw) tw = edge.label.length * fontSize * 0.6;
-      if (!th) th = fontSize * 1.25;
+      const tw = edge.labelW || edge.label.length * 13 * 0.6;
+      const th = edge.labelH || 16;
       t.x = lx - tw / 2;
       t.y = ly - th / 2;
       created.push(t);

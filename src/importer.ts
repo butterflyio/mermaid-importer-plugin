@@ -17,6 +17,8 @@ export interface SvgNodeData {
   transform: string; // "translate(tx ty)"
   label: string;
   labelStyle: Record<string, string>;
+  labelW: number;
+  labelH: number;
   shape: { kind: "path" | "rect" | "ellipse"; d?: string; x?: number; y?: number; w?: number; h?: number; rx?: number; ry?: number };
 }
 
@@ -49,10 +51,16 @@ export function extractNodes(svgDoc: Document): SvgNodeData[] {
     const fo = node.querySelector("foreignObject");
     let label = "";
     let labelStyle: Record<string, string> = {};
+    // mermaid renders the label box with EXACT width/height attributes - these
+    // give us the true text box size for centering in Penpot.
+    let labelW = 0;
+    let labelH = 0;
     if (fo) {
       label = fo.textContent?.trim() ?? "";
       const styleAttr = fo.getAttribute("style") || "";
       labelStyle = parseInlineStyle(styleAttr);
+      labelW = parseFloat(fo.getAttribute("width") || "0") || 0;
+      labelH = parseFloat(fo.getAttribute("height") || "0") || 0;
     }
     // Shape: path (d) or rect/ellipse (geometry)
     let shape: SvgNodeData["shape"] = { kind: "path" };
@@ -74,7 +82,7 @@ export function extractNodes(svgDoc: Document): SvgNodeData[] {
     } else if (ellipseEl) {
       shape = { kind: "ellipse" };
     }
-    out.push({ id, transform, label, labelStyle, shape });
+    out.push({ id, transform, label, labelStyle, labelW, labelH, shape });
   });
   return out;
 }
@@ -187,6 +195,8 @@ export interface SvgEdgeData {
   label?: string;
   labelX?: number;
   labelY?: number;
+  labelW?: number;
+  labelH?: number;
 }
 
 /** Extract edge data from the rendered SVG DOM. */
@@ -266,6 +276,8 @@ export function extractEdges(svgDoc: Document): SvgEdgeData[] {
       bestEdge.label = text;
       bestEdge.labelX = tx;
       bestEdge.labelY = ty;
+      bestEdge.labelW = parseFloat(fo.getAttribute("width") || "0") || 0;
+      bestEdge.labelH = parseFloat(fo.getAttribute("height") || "0") || 0;
     }
   });
   return edges;
